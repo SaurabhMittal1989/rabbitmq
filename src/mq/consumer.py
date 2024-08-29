@@ -32,5 +32,16 @@ def start_consumers():
     wait = [thread.join() for thread in consumer_threads]
 
 
+def start_consumer(q):
+    """start 1 consumer on queue name q, on  1 thread,  and blocks, in a recursive loop"""
+
+    consumer_thread = threading.Thread(target=consumer, args=(q,), name=f"Thread-{q}")
+    consumer_thread.start()
+    consumer_thread.join()  # block
+
+    start_consumer(q)
+
+
 if __name__ == "__main__":
     start_consumers()
+    # start_consumer("q0001")
