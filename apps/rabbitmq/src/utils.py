@@ -1,7 +1,8 @@
 import time
 
 import pika
-from src.config import exchange_name, q1, q2, host
+
+from apps.config import exchange_name, q1, q2, host
 
 
 def create_channel():

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import argparse
 
-from src.mq.utils import publish, instantiate_exchange_and_queues
+from apps.rabbitmq.src.utils import publish, instantiate_exchange_and_queues
 
 
 def start_publisher(m1, m2):
