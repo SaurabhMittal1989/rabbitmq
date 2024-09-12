@@ -1,0 +1,73 @@
+Total number of queues or partition =N_Q
+Total alive consumers = N_C
+Name of Consumers C1, C2, C3 ....
+Infra: Zookeeper, Amazon MQ (RabbitMQ or ActiveMQ), Redis, EC2 for Consumers, CloudWatch, One consumer per EC2
+
+Problem statement :
+1. A Queue/Partition must be consumed by exactly 1 Consumer
+2. 1 consumer can consume multiple Queues or be in waiting
+3. Number of queues or partition is fixed, N_Q = constant
+4. Number of consumers can be scaled up and down, N_C is variable, min(N_C) = 1, max(N_C) = 1000
+
+1. Starting one consumer C1:
+    a. The leader elected should be C1
+    b. Allocation should be 0:NQ to C1
+    c. Messages should be consumed at equal rate from each queue of N_C
+
+2. After step 1, Starting 2nd Node C2 after C1  1 minute after C1:
+    a. The leader should be C1
+    b. Allocation should be {C1: 0:N_Q/2,  C2: N_Q/2:N_Q}
+    c. C1 and C2 should stop and both shouldn't consume any messages. => Consume according to  {C1: 0:N_Q/2,  C2: N_Q/2:N_Q}
+
+3. After step 2, Starting 3rd Node C3 1 minute after C2
+    a. The leader should be C1
+    b. Allocation should be {C1: 0:N_Q/3,  C2: N_Q/3:2N_Q/3, C3: 2N_Q/3:N_Q }
+    c. C1, C2, C3 should stop and both shouldn't consume any messages. => Consume according to {C1: 0:N_Q/3,  C2: N_Q/3:2N_Q/3, C3: 2N_Q/3:N_Q }
+
+4. Start 5 Consumers at the same time: C1,C2,C3,C4,C5
+    a. One leader elected
+    b. leader should do the allocation only once
+    c. all consumers should start consuming [should not start multiple times]
+
+5. After step 4, One consumer C5 is partitioned
+    a. Leader waits for sufficient time to check if other nodes leave too.
+    b. Leader stops all consumers C1, C2,C3,C4
+    c. New allocation is identified
+    d. C1,C2,C3,C4  consume messages according to the new allocation
+    e. C5 should not consume messages parallely with C1,C2,C3,C4. C5 should kill itself
+
+6. After 5, 2 consumers C3,C2 are killed
+    a. Leader stops consumer C1,C4
+    b. New allocation is identified only once not twice
+    c. C1,C4  consume messages according to the new allocation
+
+7. After 6, Leader C1 is killed, C2 is alive
+    a. C2 becomes the leader
+    b. C2 does allocation and C2 subscribes to all queues N_Q
+
+ 8. After 4, leader C1, follower C2 is killed
+    a. C3 becomes leader
+    b. C5, C3,C4 stops consuming
+    c. C5,C3,C4 are allotted new queues (N_Q/3 each), and they start consuming
+
+9. Leader C1 makes allocation A1, and then Allocation A2 immidiately
+   a. All consumers use allocation A2, after sufficient time
+
+10. After 4, 5 more consumers start at the same time: C6,C7,C8,C9,C10:
+    a. Same leader remains as leader
+    b. New allocation is made  only once
+    c. C1:C10 subscibe to the new alocation
+
+11. Test for scale:
+    a. 500 consumers start at the same time
+    b. 500 more consumers start (Total Count 1000)
+    c. 600 consumers leave (Total Remaining 400)
+
+12: If N_Q<N_C
+    a. excess consumers should be waiting = N_Q - N_C waiting
+    b. Once N_Q - N_C + 5 active consumers die, the 5 waiting consumers should start consuming
+
+13. Nice to Have:
+   a. The new allocations to changed number of consumer should be a consistent hash manner, A max of N_Q/N_C subscriptions to be changed
+   b. Given 13.a, A consumer should give up only the queues which are removed from allocation
+   c. The Interfaces to be designed such that RabbitMq and ActiveMQ clients can be readily supported
