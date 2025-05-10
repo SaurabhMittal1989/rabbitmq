@@ -1,13 +1,11 @@
 import random
-import threading
 import time
 
 from kazoo.client import KazooClient
 from kazoo.protocol.states import KazooState
-from kazoo.recipe.watchers import DataWatch
 
 from apps.leader_election.config import INSTANCE_ID_MAX, ELECTION_NODE, STOP_FLAG, ALLOCATION_NODE
-from apps.leader_election.consumer import stop_consumer, start_consumer
+from apps.leader_election.legacy.consumer import stop_consumer, start_consumer
 
 
 def connection_listener(state: KazooState):

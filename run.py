@@ -1,6 +1,6 @@
 import time
 
-from apps.leader_election.leader_election import start, sequence
+from apps.leader_election.legacy.leader_election import start, sequence
 
 if __name__ == "__main__":
     start()
