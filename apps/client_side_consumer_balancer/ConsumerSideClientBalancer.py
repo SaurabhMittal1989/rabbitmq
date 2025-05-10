@@ -2,12 +2,12 @@ import threading
 import time
 from typing import Callable, Any
 
-from apps.leader_election.ConfigurationManagerClient import IConfigurationManagerClient
-from apps.leader_election.Follower import IFollower
-from apps.leader_election.Leader import ILeader
-from apps.leader_election.MessageQueueClient import IMessageQueueClient
-from apps.leader_election.Register import IRegister
-from apps.leader_election.Singleton import singleton
+from apps.client_side_consumer_balancer.ConfigurationManagerClient import IConfigurationManagerClient
+from apps.client_side_consumer_balancer.Follower import IFollower
+from apps.client_side_consumer_balancer.Leader import ILeader
+from apps.client_side_consumer_balancer.MessageQueueClient import IMessageQueueClient
+from apps.client_side_consumer_balancer.Register import IRegister
+from apps.client_side_consumer_balancer.Singleton import singleton
 
 
 @singleton

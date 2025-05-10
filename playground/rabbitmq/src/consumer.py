@@ -2,7 +2,7 @@ import threading
 import time
 
 from apps.config import q1, q2
-from apps.rabbitmq.src.utils import instantiate_exchange_and_queues, get_queue_names
+from playground.rabbitmq.src.utils import instantiate_exchange_and_queues, get_queue_names
 
 threads = []
 

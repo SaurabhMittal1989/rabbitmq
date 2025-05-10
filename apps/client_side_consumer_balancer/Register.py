@@ -1,6 +1,6 @@
 from abc import abstractmethod, ABC
 
-from apps.leader_election.ConfigurationManagerClient import IConfigurationManagerClient
+from apps.client_side_consumer_balancer.ConfigurationManagerClient import IConfigurationManagerClient
 
 
 class IRegister(ABC):
