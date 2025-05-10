@@ -21,7 +21,8 @@ Step 5: StartRabbitmq => Make a consistent hash exchange
 5. Follower Callback : print I am consuming
 6. Make two threads: leader.py and follower.py code to run on 2 threads
 
-![image](https://github.com/user-attachments/assets/4e1a586d-1a87-4e5f-85ee-ac7f7bfebf2f)
+![image](https://github.com/user-attachments/assets/3435b8f2-3839-4263-990a-93c49f65ca66)
+
 
 
 ![image](https://github.com/user-attachments/assets/eed7cb02-7731-4099-b6fa-08fda9d991a0)
