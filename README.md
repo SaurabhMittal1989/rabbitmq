@@ -24,4 +24,7 @@ Step 5: StartRabbitmq => Make a consistent hash exchange
 
 ![image](https://github.com/user-attachments/assets/eed7cb02-7731-4099-b6fa-08fda9d991a0)
 
+![image](https://github.com/user-attachments/assets/352b2fc0-2dd9-4559-ba1d-48c4a4093ce9)
+
+
 
