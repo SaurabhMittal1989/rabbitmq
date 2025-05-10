@@ -1,6 +1,6 @@
 import time
 
-from apps.client_side_consumer_balancer.legacy.leader_election import start, sequence
+from playground.legacy import start, sequence
 
 if __name__ == "__main__":
     start()

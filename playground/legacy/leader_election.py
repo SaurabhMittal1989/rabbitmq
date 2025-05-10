@@ -5,7 +5,7 @@ from kazoo.client import KazooClient
 from kazoo.protocol.states import KazooState
 
 from apps.client_side_consumer_balancer.config import INSTANCE_ID_MAX, ELECTION_NODE, STOP_FLAG, ALLOCATION_NODE
-from apps.client_side_consumer_balancer.legacy.consumer import stop_consumer, start_consumer
+from playground.legacy.consumer import stop_consumer, start_consumer
 
 
 def connection_listener(state: KazooState):
