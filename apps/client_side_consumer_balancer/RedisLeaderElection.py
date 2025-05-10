@@ -14,12 +14,12 @@ REDIS_PORT = 6379
 LOCK_KEY = "leader_election_lock"  # The Redis key used for the lock
 LEASE_DURATION_MS = 10 * 1000  # 10 seconds: How long the lease is valid
 RENEWAL_INTERVAL_S = LEASE_DURATION_MS / 1000 / 3  # Renew at 1/3 of the lease duration
-NUMBER_OF_TIMES_TO_CHECK_FOR_LEADER_PER_LEASE_INTERVAL = 5
-ELECTION_CHECK_INTERVAL_S = LEASE_DURATION_MS / 1000 / NUMBER_OF_TIMES_TO_CHECK_FOR_LEADER_PER_LEASE_INTERVAL  # How often non-leaders check if they can become leader
+NUMBER_OF_TIMES_TO_CHECK_FOR_LEADER_PER_LEASE_DURATION = 5
+ELECTION_CHECK_INTERVAL_S = LEASE_DURATION_MS / 1000 / NUMBER_OF_TIMES_TO_CHECK_FOR_LEADER_PER_LEASE_DURATION  # How often non-leaders check if they can become leader
 
 
 class RedisLeaderElector:
-    def __init__(self, redis_client, lock_key, node_id, lease_duration_ms, renewal_interval_s, leader_callback):
+    def __init__(self, redis_client, lock_key, node_id, lease_duration_ms, renewal_interval_s, leader_callback: Callable):
         self.r = redis_client
         self.lock_key = lock_key
         self.node_id = node_id  # Unique ID for this instance
@@ -164,7 +164,7 @@ class RedisLeaderElector:
                         logging.info(f"Node {self.node_id}: Still a follower. Checking again in {ELECTION_CHECK_INTERVAL_S}s.")
                         # Sleep, but check stop_main_loop frequently
                         for _ in range(
-                                NUMBER_OF_TIMES_TO_CHECK_FOR_LEADER_PER_LEASE_INTERVAL):  # Check 10 times per interval
+                                NUMBER_OF_TIMES_TO_CHECK_FOR_LEADER_PER_LEASE_DURATION):  # Check 10 times per interval
                             if stop_main_loop.wait(ELECTION_CHECK_INTERVAL_S):
                                 break
                         if stop_main_loop.is_set():
@@ -186,7 +186,7 @@ class RedisLeaderElector:
                     logging.info(f"Node {self.node_id}: I AM A FOLLOWER. Waiting...")
                     # Sleep, but check stop_main_loop frequently
                     for _ in range(
-                            NUMBER_OF_TIMES_TO_CHECK_FOR_LEADER_PER_LEASE_INTERVAL):  # Check 10 times per interval
+                            NUMBER_OF_TIMES_TO_CHECK_FOR_LEADER_PER_LEASE_DURATION):  # Check 10 times per interval
                         if stop_main_loop.wait(ELECTION_CHECK_INTERVAL_S):
                             break
                     if stop_main_loop.is_set():
