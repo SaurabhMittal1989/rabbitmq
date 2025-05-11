@@ -1,5 +1,3 @@
-from typing import Callable
-
 import pika
 import threading
 import time
@@ -12,7 +10,7 @@ logger = logging.getLogger(__name__)
 RABBITMQ_HOST = 'localhost'
 
 class DynamicConsumer:
-    def __init__(self, rabbitmq_host, callback: Callable):
+    def __init__(self, rabbitmq_host):
         self.rabbitmq_host = rabbitmq_host
         self.connection = None
         self.channel = None
@@ -22,13 +20,12 @@ class DynamicConsumer:
         self._stop_event = threading.Event()
         self._consumer_thread = None
         self._is_consuming_loop_active = False # To track if start_consuming is active
-        self.callback = callback
 
     def _on_message(self, ch, method, properties, body, queue_name):
         logger.info(f"Received message from {queue_name}: {body.decode()}")
         try:
             # Simulate processing
-            self.callback(body) #  actual work
+            time.sleep(0.1) # Placeholder for actual work
             if ch.is_open: # Important check before acking
                 ch.basic_ack(delivery_tag=method.delivery_tag)
                 logger.info(f"Acked message from {queue_name}")
@@ -341,17 +338,8 @@ class DynamicConsumer:
                 logger.warning("Consumer thread did not exit cleanly after timeout during stop.")
         logger.info("DynamicConsumer stop processing finished.")
 
-
-def create_consumer(host, callback):
-    dynamic_consumer = DynamicConsumer(rabbitmq_host=host, callback=callback)
-    dynamic_consumer.start()
-
-    # Give the consumer a moment to connect
-    time.sleep(3)
-    return dynamic_consumer
-
-
-def queue_monitor(consumer: DynamicConsumer):
+# --- Example Usage (same as before) ---
+def queue_monitor_simulation(consumer: DynamicConsumer):
     """Simulates an external mechanism that changes queue assignments."""
     threading.current_thread().name = "QueueMonitorThread"
     queue_sets = [  # test cases
@@ -379,17 +367,14 @@ def queue_monitor(consumer: DynamicConsumer):
 
 
 if __name__ == "__main__":
-    def callback(body):
-        print(f"I am the callback {body}")
-        time.sleep(0.2)
-
-    dynamic_consumer = create_consumer(host=RABBITMQ_HOST,callback=callback)
+    dynamic_consumer = DynamicConsumer(rabbitmq_host=RABBITMQ_HOST)
+    dynamic_consumer.start()
 
     # Give the consumer a moment to connect
     time.sleep(3) # Slightly longer for initial setup
 
     # Start the simulation of queue changes in a separate thread
-    monitor_thread = threading.Thread(target=queue_monitor, args=(dynamic_consumer,))
+    monitor_thread = threading.Thread(target=queue_monitor_simulation, args=(dynamic_consumer,))
     monitor_thread.start()
 
     try:
