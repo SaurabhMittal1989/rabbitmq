@@ -20,7 +20,7 @@ class IConfigurationManagerClient(ABC):
         pass
 
     @abstractmethod
-    def get_value(self, key: str, value) -> Any:
+    def get_value(self, key: str, default_value: Any = None) -> Any:
         """
         Retrieve a configuration value by its key.
 
@@ -73,46 +73,11 @@ class IConfigurationManagerClient(ABC):
             bool: True if key exists, False otherwise
         """
         pass
+    #
+    # @abstractmethod
+    # def listen_for_config_changes(self, apply_config: Callable):
+    #     pass
 
     @abstractmethod
-    def register_watch(self, key: str, callback: Callable[[str, Any, Any], None]) -> str:
-        """
-        Register a callback function to watch for changes in a configuration value.
-
-        Args:
-            key: The configuration key to watch
-            callback: A callback function that will be called when the value changes.
-                     The callback should accept three parameters:
-                     - key (str): The configuration key that changed
-                     - old_value (Any): The previous value
-                     - new_value (Any): The new value
-
-        Returns:
-            str: A unique watch ID that can be used to deregister the watch later
-
-        Example:
-            def on_config_change(key, old_value, new_value):
-                print(f"Config {key} changed from {old_value} to {new_value}")
-
-            watch_id = config_client.register_watch("server.port", on_config_change)
-        """
-        pass
-
-    @abstractmethod
-    def deregister_watch(self, watch_id: str) -> bool:
-        """
-        Remove a previously registered configuration watch.
-
-        Args:
-            watch_id: The watch ID returned from register_watch
-
-        Returns:
-            bool: True if the watch was successfully removed, False if the watch_id was not found
-
-        Example:
-            if config_client.deregister_watch(watch_id):
-                print("Watch successfully removed")
-            else:
-                print("Watch not found")
-        """
+    def stop(self):
         pass

@@ -5,24 +5,27 @@ from typing import Any, Callable
 import pika
 
 from apps.client_side_consumer_balancer.Message import Message
+from apps.client_side_consumer_balancer.MessageQueueClient import IMessageQueueClient
 
 
-class RabbitMQMessageQueueClient:
+class RabbitMQMessageQueueClient (IMessageQueueClient):
 
-    def __init__(self, host):
+    def __init__(self, host: str, exchange_name: str, callback: Callable ):
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=host))
         self.channel = connection.channel()
+        self.exchange_name = exchange_name
+        self.callback = callback
 
-    def publish(self, exchange_name: str, message: Message) -> bool:
+
+    def publish(self,  message: Message) -> bool:
         """
-        Publish a message to RabbitMQ with routing key and headers.
+        Publish a message to RabbitMQ with the routing key and headers.
 
         Args:
-            exchange_name: The name of the exchange to publish to
             message: Message object containing payload, routing key and headers
 
         Returns:
-            bool: True if message was published successfully, False otherwise
+            bool: True if the message was published successfully, False otherwise
         """
         try:
             properties = pika.BasicProperties(
@@ -33,7 +36,7 @@ class RabbitMQMessageQueueClient:
             body = json.dumps(message.payload) if not isinstance(message.payload, (str, bytes)) else message.payload
 
             self.channel.basic_publish(
-                exchange=exchange_name,
+                exchange=self.exchange_name,
                 routing_key=message.routing_key,
                 body=body,
                 properties=properties
@@ -65,40 +68,43 @@ class RabbitMQMessageQueueClient:
 
 
 
-    def subscribe(self, queue: str, callback: Callable) -> bool:
-        """
-        Subscribe to a specific queue and set up a callback for message processing.
-    
-        Args:
-            queue: The name of the queue to subscribe to
-            callback: The callback function to process received messages
-    
-        Returns:
-            bool: True if subscription is successful, False otherwise
-        """
+
+    def subscribe_to_queue(self, queue_name):
         try:
             self.channel.basic_consume(
-                queue=queue,
-                on_message_callback=callback,
+                queue=queue_name,
+                on_message_callback=self.callback,
                 auto_ack=True
             )
-            print(f'Subscribed to queue: {queue}')
             self.channel.start_consuming()
+            print(f'Subscribed to queue: {queue_name}')
             return True
-
         except Exception as e:
-            print(f"Error subscribing to queue: {e}")
+            print(f"Error subscribing to queue {queue_name}: {e}")
             return False
-        finally:
-            self.close()
+
+    def unsubscribe_from_queue(self, queue_name):
+        try:
+            self.channel.basic_cancel(consumer_tag=queue_name)
+            print(f'Unsubscribed from queue: {queue_name}')
+            return True
+        except Exception as e:
+            print(f"Error unsubscribing from queue {queue_name}: {e}")
+            return False
 
 
 if __name__ == "__main__":
     """
     Example usage of RabbitMQ client with a local server.
     """
+    # Define callback for received messages
+    def process_message(ch, method, properties, body):
+
+            print(f"Received message: {body}")
+
+            # Subscribe to queue
     # Initialize client
-    client = RabbitMQMessageQueueClient(host='localhost')
+    client = RabbitMQMessageQueueClient(host='localhost',exchange_name = "my_exchange", callback=process_message)
 
     # Define example exchange and queue
     exchange_name = "my_exchange"
@@ -107,21 +113,20 @@ if __name__ == "__main__":
     # Create a message
     message = Message(
         payload={"test": "Hello RabbitMQ!"},
-        routing_key=1,
+        routing_key='1',
         headers={"content_type": "application/json"}
     )
 
     # Publish message
-    client.publish(exchange_name, message)
+    for i in range(100):
+        m = message.routing_key = f"{i}"
+        client.publish( message)
 
 
-    # Define callback for received messages
-    def process_message(ch, method, properties, body):
 
-            print(f"Received message: {body}")
 
-            # Subscribe to queue
-    client.subscribe(queue_name, process_message)
+
+    client.subscribe_to_queue(queue_name)
 
     # Close connection when done
     client.close()

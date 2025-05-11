@@ -17,7 +17,7 @@ from apps.client_side_consumer_balancer.LeaderCallback import ILeaderCallback
 from apps.client_side_consumer_balancer.MessageQueueClient import IMessageQueueClient
 from apps.client_side_consumer_balancer.Register import IRegister
 from apps.client_side_consumer_balancer.rabbitmq.RabbitMQMessageQueueClient import RabbitMQMessageQueueClient
-from apps.client_side_consumer_balancer.redis.RedisConfigurationManagerClient import RedisConfigurationManagerClient
+from apps.client_side_consumer_balancer.redisimpl.RedisConfigurationManagerClient import RedisConfigurationManagerClient
 
 config_client = RedisConfigurationManagerClient()
 message_queue_client = RabbitMQMessageQueueClient()
