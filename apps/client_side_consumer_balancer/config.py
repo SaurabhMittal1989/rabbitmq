@@ -17,6 +17,7 @@ ELECTION_CHECK_INTERVAL_S = LEASE_DURATION_MS / 1000 / NUMBER_OF_TIMES_TO_CHECK_
 
 #REDIS Follower:
 CONFIG_KEY = f"consumer:queues_config:{uuid.uuid4()}"
+CONFIG_KEY = f"consumer:queues_config:123"
 print("CONFIG KEY CHANGES: ", CONFIG_KEY)
 REDIS_DB_NUMBER = 0
 
@@ -25,4 +26,5 @@ REDIS_DB_NUMBER = 0
 RABBIT_MQ_HOST='localhost'
 # Define example exchange and queue
 RABBIT_MQ_EXCHANGE_NAME = "my_exchange"
-RABBIT_MQ_QUEUE_NAME = "q0001"
+RABBIT_MQ_QUEUE_NAME = "q0002"
+RABBITMQ_PREFETCH_COUNT=1

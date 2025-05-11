@@ -2,7 +2,7 @@ import threading
 
 from apps.client_side_consumer_balancer.ConfigurationManagerClient import IConfigurationManagerClient
 from apps.client_side_consumer_balancer.MessageQueueClient import IMessageQueueClient
-
+from apps.client_side_consumer_balancer.config import *
 
 
 class IFollowerCallback:
@@ -51,7 +51,7 @@ class FollowerCallback(IFollowerCallback):
         self.configuration_manager_client.pubsub.subscribe(notification_channel)
         print(f"Listening for changes on Redis key: '{self.config_key}' via channel '{notification_channel}'")
 
-        for message in self.configuration_manager_client.pubsub.listen():
+        for message in self.configuration_manager_client.pubsub.listen(): # blocking call
             # message format: {'type': 'message', 'pattern': None, 'channel': b'__keyspace@0__:consumer:queues_config', 'data': b'set'}
             print(f"Received notification: {message}")
             if message['type'] == 'message':
