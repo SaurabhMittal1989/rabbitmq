@@ -8,7 +8,7 @@ import redis
 
 from apps.client_side_consumer_balancer.LeaderElector import ILeaderElector
 from apps.client_side_consumer_balancer.config import *
-from logger_config import *
+from apps.client_side_consumer_balancer.logger_config import *
 
 
 class RedisLeaderElector(ILeaderElector):
