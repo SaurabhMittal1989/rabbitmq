@@ -1,3 +1,11 @@
+"""
+QueueConsumerLongPoll implements a Redis-based queue consumer that uses long polling
+to monitor configuration changes. It maintains subscriptions to multiple queues and
+dynamically updates these subscriptions based on configuration changes in Redis.
+"""
+
+from random import randint
+
 import redis
 import json
 import threading
@@ -6,6 +14,14 @@ import uuid
 
 class QueueConsumerLongPoll:
     def __init__(self, follower_id: str, redis_host='localhost', redis_port=6379, redis_db=0):
+        """Initialize a new queue consumer with long polling capabilities.
+        
+        Args:
+            follower_id: Unique identifier for this consumer
+            redis_host: Redis server hostname
+            redis_port: Redis server port
+            redis_db: Redis database number
+        """
         self.redis_client = redis.Redis(host=redis_host, port=redis_port, db=redis_db, decode_responses=True)
         self.config_key = f"consumer:queues_config:{follower_id}"
         self.signal_key = f"consumer:config_update_signal:{follower_id}" # Key for BRPOP
@@ -93,6 +109,9 @@ class QueueConsumerLongPoll:
 
 
     def stop(self):
+        """Stop the consumer, unsubscribe from all queues and cleanup resources.
+        Interrupts the long polling thread and waits for it to complete.
+        """
         print("Stopping consumer (long poll)...")
         self.is_running = False
         # To interrupt BRPOP if it's blocking:
@@ -125,7 +144,7 @@ class QueueConsumerLongPoll:
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--follower_id', required=True)
+    parser.add_argument('--follower_id',  default=randint(10000, 100000))
     args = parser.parse_args()
     consumer = QueueConsumerLongPoll(follower_id=args.follower_id) # Assuming Redis DB 0
 

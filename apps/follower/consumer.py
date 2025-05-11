@@ -1,4 +1,13 @@
-# Example in Python (using redis-py) - Consumer
+"""A Redis-based queue consumer that dynamically manages message queue subscriptions.
+
+This module implements a consumer that:
+- Monitors a Redis configuration key for queue subscription updates
+- Automatically subscribes/unsubscribes to queues based on configuration changes
+- Handles configuration updates through Redis pub/sub notifications
+- Provides clean shutdown and connection management
+"""
+
+import random
 import redis
 import json
 import threading
@@ -93,7 +102,7 @@ class QueueConsumer:
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--follower_id', required=True)
+    parser.add_argument('--follower_id', default=random.randint(10000, 100000))
     args = parser.parse_args()
     consumer = QueueConsumer(redis_db=0, follower_id=args.follower_id) # Assuming Redis DB 0
 
