@@ -5,6 +5,7 @@ import threading
 import time
 import functools
 import logging
+import queue
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(threadName)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -350,29 +351,33 @@ def create_consumer(host, callback):
     time.sleep(3)
     return dynamic_consumer
 
-
-def queue_monitor(consumer: DynamicConsumer):
+STOP_SIGNAL = 0
+def queue_monitor(consumer: DynamicConsumer, thread_queue):
     """Simulates an external mechanism that changes queue assignments."""
     threading.current_thread().name = "QueueMonitorThread"
-    queue_sets = [  # test cases
-        {'q0001', },
-        {'q0001', 'q0005'},
-        {'q0002', 'q0003','q0004'},
-        {'q0004', 'q0005'},
-        set(), # Unsubscribe from all
-        {'q0006'} # Unknown queue
-    ]
-    for i, q_set in enumerate(queue_sets):
-        if consumer._stop_event.is_set(): # Check if consumer is stopping
-            logger.info("Monitor: Consumer is stopping, exiting monitor simulation.")
+    while True:
+        try:
+            # The get() method will block until an item is available
+            message = thread_queue.get()
+            if message == STOP_SIGNAL:
+                print("Monitor Thread: Received STOP_SIGNAL. Exiting.")
+                thread_queue.task_done()  # Signal that this task is done
+                break
+            print(f"Monitor Thread Received: {message}")
+            thread_queue.task_done()  # Signal that this task is done
+            if consumer._stop_event.is_set():  # Check if consumer is stopping
+                logger.info("Monitor: Consumer is stopping, exiting monitor simulation.")
+                break
+
+            consumer.update_target_queues(message)  # This will schedule reconciliation
+            print("-----------------------------------------------------------------------------------")
+            if consumer._stop_event.wait(15):  # Wait, but break if consumer stops
+                logger.info("Monitor: Consumer stopping during wait, exiting monitor simulation.")
+                break
+        except Exception as e:
+            print(f"Monitor: Error - {e}")
             break
-        logger.info(f"Monitor: Simulating change {i+1}. Target queues: {q_set}")
-        consumer.update_target_queues(q_set) # This will schedule reconciliation
-        print("-----------------------------------------------------------------------------------")
-        if consumer._stop_event.wait(15): # Wait, but break if consumer stops
-            logger.info("Monitor: Consumer stopping during wait, exiting monitor simulation.")
-            break
-    logger.info("Monitor: Simulation finished.")
+
     if not consumer._stop_event.is_set(): # Only stop if not already stopping
         logger.info("Monitor: Requesting consumer to stop.")
         consumer.stop()
@@ -389,8 +394,23 @@ if __name__ == "__main__":
     time.sleep(3) # Slightly longer for initial setup
 
     # Start the simulation of queue changes in a separate thread
-    monitor_thread = threading.Thread(target=queue_monitor, args=(dynamic_consumer,))
+    message_queue = queue.Queue()
+    monitor_thread = threading.Thread(target=queue_monitor, args=(dynamic_consumer, message_queue))
     monitor_thread.start()
+
+    queue_sets = [  # test cases
+        {'q0001', },
+        {'q0001', 'q0005'},
+        {'q0002', 'q0003','q0004'},
+        {'q0004', 'q0005'},
+        set(), # Unsubscribe from all
+        {'q0006'} # Unknown queue
+    ]
+
+    for queues in queue_sets:
+        message_queue.put(queues)
+        time.sleep(2)
+        print("------------------")
 
     try:
         # Keep the main thread alive while the monitor and consumer run
@@ -405,3 +425,4 @@ if __name__ == "__main__":
         dynamic_consumer._consumer_thread.join(timeout=10)
 
     logger.info("Main: Application exiting.")
+
