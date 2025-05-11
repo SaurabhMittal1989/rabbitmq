@@ -3,8 +3,8 @@ import time
 from typing import Callable, Any
 
 from apps.client_side_consumer_balancer.ConfigurationManagerClient import IConfigurationManagerClient
-from apps.client_side_consumer_balancer.Follower import IFollower
-from apps.client_side_consumer_balancer.Leader import ILeader
+from apps.client_side_consumer_balancer.FollowerCallback import IFollowerCallback
+from apps.client_side_consumer_balancer.LeaderCallback import ILeaderCallback
 from apps.client_side_consumer_balancer.MessageQueueClient import IMessageQueueClient
 from apps.client_side_consumer_balancer.Register import IRegister
 from apps.client_side_consumer_balancer.Singleton import singleton
@@ -13,15 +13,15 @@ from apps.client_side_consumer_balancer.Singleton import singleton
 @singleton
 class ConsumerSideClientBalancer:
 
-    def __init__(self, register: IRegister, leader: ILeader, follower: IFollower):
+    def __init__(self, register: IRegister, leader: ILeaderCallback, follower: IFollowerCallback):
         self.register = register
         self.leader = leader
         self.follower = follower
 
     def balance(self):
         self.register.register()
-        leader_thread = self.start_thread(self.leader.leader_callback)
-        follower_thread = self.start_thread(self.follower.follower_callback)
+        leader_thread = self.start_thread(self.leader.run)
+        follower_thread = self.start_thread(self.follower.run)
         leader_thread.join()
         follower_thread.join()
 
@@ -45,26 +45,30 @@ class ConsumerSideClientBalancer:
 
         return func
 
-if __name__ =="__main__":
-    # fixtures
-    class Leader(ILeader):
 
-        def leader_callback(self):
+if __name__ == "__main__":
+    # fixtures
+    class Leader(ILeaderCallback):
+
+        def run(self):
             print(f"I am the leader. Thread ID: {threading.get_ident()}")
             time.sleep(2)
             print("Leader exiting")
 
-    class Follower(IFollower):
-        def follower_callback(self):
+
+    class Follower(IFollowerCallback):
+        def run(self):
             print(f"I am the follower. Thread ID: {threading.get_ident()}")
             time.sleep(2)
             print("Follower exiting")
+
 
     class Register(IRegister):
         def register(self):
             print(f"Registered. Thread ID: {threading.get_ident()}")
             time.sleep(2)
             print("Register exiting")
+
 
     class ConfigurationManagerClient(IConfigurationManagerClient):
         def register(self) -> bool:
@@ -91,6 +95,7 @@ if __name__ =="__main__":
         def __init__(self):
             pass
 
+
     class MessageQueueClient(IMessageQueueClient):
         def connect(self) -> bool:
             pass
@@ -106,6 +111,7 @@ if __name__ =="__main__":
 
         def __init__(self):
             pass
+
 
     config_client = ConfigurationManagerClient()
     message_queue_client = MessageQueueClient()

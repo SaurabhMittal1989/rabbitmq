@@ -6,20 +6,14 @@ from typing import Callable
 
 import redis
 
+from apps.client_side_consumer_balancer.LeaderElector import ILeaderElector
+from apps.client_side_consumer_balancer.config import *
 from logger_config import *
 
-# --- Configuration ---
-REDIS_HOST = 'localhost'
-REDIS_PORT = 6379
-LOCK_KEY = "leader_election_lock"  # The Redis key used for the lock
-LEASE_DURATION_MS = 10 * 1000  # 10 seconds: How long the lease is valid
-RENEWAL_INTERVAL_S = LEASE_DURATION_MS / 1000 / 3  # Renew at 1/3 of the lease duration
-NUMBER_OF_TIMES_TO_CHECK_FOR_LEADER_PER_LEASE_DURATION = 5
-ELECTION_CHECK_INTERVAL_S = LEASE_DURATION_MS / 1000 / NUMBER_OF_TIMES_TO_CHECK_FOR_LEADER_PER_LEASE_DURATION  # How often non-leaders check if they can become leader
 
-
-class RedisLeaderElector:
-    def __init__(self, redis_client, lock_key, node_id, lease_duration_ms, renewal_interval_s, leader_callback: Callable):
+class RedisLeaderElector(ILeaderElector):
+    def __init__(self, redis_client, lock_key, node_id, lease_duration_ms, renewal_interval_s,
+                 leader_callback: Callable):
         self.r = redis_client
         self.lock_key = lock_key
         self.node_id = node_id  # Unique ID for this instance
@@ -74,7 +68,7 @@ class RedisLeaderElector:
                 # ARGV[1] = self.node_id
                 # ARGV[2] = self.lease_duration_ms
                 renewed = self.r.evalsha(self._renew_script_sha, 1, self.lock_key, self.node_id, self.lease_duration_ms)
-                if renewed == 1:  # PEXPIRE returns 1 on success, 0 if key doesn't exist or value mismatch
+                if renewed == 1:  # PEXPIRE returns 1 on success, 0 if the key doesn't exist or value mismatch
                     logging.debug(f"Node {self.node_id}: Lease renewed successfully.")
                 else:
                     logging.warning(f"Node {self.node_id}: Failed to renew lease. Stepping down.")
@@ -161,7 +155,8 @@ class RedisLeaderElector:
                         # Just became leader, _try_acquire_lock starts renewal
                         pass
                     else:
-                        logging.info(f"Node {self.node_id}: Still a follower. Checking again in {ELECTION_CHECK_INTERVAL_S}s.")
+                        logging.info(
+                            f"Node {self.node_id}: Still a follower. Checking again in {ELECTION_CHECK_INTERVAL_S}s.")
                         # Sleep, but check stop_main_loop frequently
                         for _ in range(
                                 NUMBER_OF_TIMES_TO_CHECK_FOR_LEADER_PER_LEASE_DURATION):  # Check 10 times per interval
@@ -202,37 +197,38 @@ class RedisLeaderElector:
                     logging.error(f"Node {self.node_id}: Error closing Redis connection: {e}")
 
 
-def elect_leader(leader_callback:Callable):
-    node_id = str(uuid.uuid4())  # Generate a unique ID for this instance
-    logging.info(f"Starting instance with Node ID: {node_id}")
-
-    try:
-        r_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
-        r_client.ping()
-        logging.info("Successfully connected to Redis.")
-    except redis.exceptions.ConnectionError as e:
-        logging.error(f"Could not connect to Redis: {e}")
-        return
-
-    elector = RedisLeaderElector(
-        redis_client=r_client,
-        lock_key=LOCK_KEY,
-        node_id=node_id,
-        lease_duration_ms=LEASE_DURATION_MS,
-        renewal_interval_s=RENEWAL_INTERVAL_S,
-        leader_callback=leader_callback
-    )
-
-    elector.run_election_loop()
-    logging.info(f"Node {node_id}: Application finished.")
-
-
 if __name__ == "__main__":
     # To test, run this script in multiple terminals.
     # Only one should become the leader. If you kill the leader (Ctrl+C),
     # another one should take over after the lease expires or the election check interval.
-    def leader_callback ():
+    def leader_callback():
         logging.info("I am the leader. Doing work.")
-        time.sleep(LEASE_DURATION_MS/3/1000)
+        time.sleep(LEASE_DURATION_MS / 3 / 1000)
+
+
+    def elect_leader(leader_callback: Callable):
+        node_id = str(uuid.uuid4())  # Generate a unique ID for this instance
+        logging.info(f"Starting instance with Node ID: {node_id}")
+
+        try:
+            r_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+            r_client.ping()
+            logging.info("Successfully connected to Redis.")
+        except redis.exceptions.ConnectionError as e:
+            logging.error(f"Could not connect to Redis: {e}")
+            return
+
+        elector = RedisLeaderElector(
+            redis_client=r_client,
+            lock_key=LOCK_KEY,
+            node_id=node_id,
+            lease_duration_ms=LEASE_DURATION_MS,
+            renewal_interval_s=RENEWAL_INTERVAL_S,
+            leader_callback=leader_callback
+        )
+
+        elector.run_election_loop()
+        logging.info(f"Node {node_id}: Application finished.")
+
 
     elect_leader(leader_callback=leader_callback)
