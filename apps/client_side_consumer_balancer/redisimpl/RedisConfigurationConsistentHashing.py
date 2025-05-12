@@ -7,6 +7,7 @@ from apps.client_side_consumer_balancer.config import *
 import logging
 import json
 import requests
+import urllib.parse
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ class ClusterManager:
     def _get_available_queues(self):
         """Get list of queues from RabbitMQ Management API."""
         # Construct the URL safely
-        vhost_encoded = requests.utils.quote('/', safe='')
+        vhost_encoded = urllib.parse.quote('/', safe='')
         url = f"http://{RABBIT_MQ_HOST}:15672/api/queues/{vhost_encoded}"
         try:
             response = requests.get(url, auth=(RABBITMQ_USER, RABBITMQ_PASS), timeout=5)
