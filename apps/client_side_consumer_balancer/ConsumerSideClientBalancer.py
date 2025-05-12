@@ -52,9 +52,10 @@ if __name__ == "__main__":
     class Leader(ILeaderCallback):
 
         def run(self):
-            print(f"I am the leader. Thread ID: {threading.get_ident()}")
-            time.sleep(2)
-            print("Leader exiting")
+            #print(f"I am the leader. Thread ID: {threading.get_ident()}")
+            print("[LEADER] Watching for Configuration changes...")
+            time.sleep(5)
+
 
 
     class Follower(IFollowerCallback):
@@ -70,16 +71,17 @@ if __name__ == "__main__":
             self.is_first_time = True
 
         def run(self):
-            print(f"I am the follower. Thread ID: {threading.get_ident()}")
+            #print(f"I am the follower. Thread ID: {threading.get_ident()}")
+            print("[CONSUMER] Consuming Messages")
             time.sleep(2)
-            print("Follower exiting")
+
 
 
     class Register(IRegister):
         def register(self):
-            print(f"Registered. Thread ID: {threading.get_ident()}")
+            print(f"Registered for Leader Election. Thread ID: {threading.get_ident()}")
             time.sleep(2)
-            print("Register exiting")
+
 
 
     class ConfigurationManagerClient(IConfigurationManagerClient):

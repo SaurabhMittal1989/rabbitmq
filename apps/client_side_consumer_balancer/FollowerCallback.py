@@ -8,7 +8,7 @@ from apps.client_side_consumer_balancer.config import *
 from apps.client_side_consumer_balancer.rabbitmq.RabbitMQDynamicConsumerClientThreadSafe import create_consumer, \
     queue_monitor
 
-
+# TODO rename it to Consumer and IConsumer
 class IFollowerCallback:
     pass
 
@@ -26,11 +26,7 @@ class FollowerCallback(IFollowerCallback):
         self.is_first_time = True
 
     def run(self):
-        """Callback function that will be executed when the configuration changes."""
-
-        # One thread listens to configuration changes
-
-        # Start listening for notifications in a separate thread
+        # One thread listens to configuration changes:  Start listening for notifications in a separate thread
         self.notification_thread = threading.Thread(target=self.listen_for_config_changes,
                                                     daemon=True)
         self.notification_thread.start()
