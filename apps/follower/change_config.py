@@ -44,6 +44,6 @@ def update_queue_config(new_queues_list, follower_id=0):
 
 # Example usage:
 update_queue_config_atomic_longpoll(1, ["q0001"])
-update_queue_config_atomic_longpoll('123', ["q0005"])
+update_queue_config_atomic_longpoll('123', ["q0002"])
 update_queue_config_atomic_longpoll(3, ["q0003", "q0004"])
 # update_queue_config(["4"], follower_id=3)

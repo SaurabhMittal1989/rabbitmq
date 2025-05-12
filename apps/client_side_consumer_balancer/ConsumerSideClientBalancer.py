@@ -1,5 +1,6 @@
 import threading
 import time
+import uuid
 from typing import Callable, Any
 
 from apps.client_side_consumer_balancer.ConfigurationManagerClient import IConfigurationManagerClient
@@ -57,6 +58,17 @@ if __name__ == "__main__":
 
 
     class Follower(IFollowerCallback):
+        def __init__(self,
+                     configuration_manager_client: IConfigurationManagerClient,
+                     message_queue_client: IMessageQueueClient,
+                     config_key: str):
+            self.configuration_manager_client = configuration_manager_client
+            self.message_queue_client = message_queue_client
+            self.config_key = config_key
+            self.current_subscribed_queues: set = set()
+            self.notification_thread = None
+            self.is_first_time = True
+
         def run(self):
             print(f"I am the follower. Thread ID: {threading.get_ident()}")
             time.sleep(2)
@@ -74,7 +86,7 @@ if __name__ == "__main__":
         def register(self) -> bool:
             pass
 
-        def get_value(self, key: str, value) -> Any:
+        def get_value(self, key: str, default_value: Any = None) -> Any:
             pass
 
         def set_value(self, key: str, value: Any) -> bool:
@@ -103,10 +115,14 @@ if __name__ == "__main__":
         def close(self) -> None:
             pass
 
-        def publish(self, topic: str, message: Any) -> bool:
+        def publish(self, message: Any) -> bool:
             pass
 
         def subscribe(self, topic: str) -> bool:
+            pass
+        def unsubscribe_from_queue(self, queue_name: str) -> bool:
+            pass
+        def subscribe_to_queue(self, queue_name: str) -> bool:
             pass
 
         def __init__(self):
@@ -116,7 +132,7 @@ if __name__ == "__main__":
     config_client = ConfigurationManagerClient()
     message_queue_client = MessageQueueClient()
     leader = Leader(configuration_manager_client=config_client, message_queue_client=message_queue_client)
-    follower = Follower(configuration_manager_client=config_client, message_queue_client=message_queue_client)
+    follower = Follower(configuration_manager_client=config_client, message_queue_client=message_queue_client, config_key=uuid.uuid1())
     register = Register(configuration_manager_client=config_client)
 
     # test 1: Singleton:

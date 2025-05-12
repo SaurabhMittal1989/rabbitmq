@@ -27,15 +27,15 @@ class RedisLeaderElector(ILeaderElector):
 
         # Load Lua scripts
         self._renew_script_sha = self.r.script_load("""
-            if redisimpl.call("GET", KEYS[1]) == ARGV[1] then
-              return redisimpl.call("PEXPIRE", KEYS[1], ARGV[2])
+            if redis.call("GET", KEYS[1]) == ARGV[1] then
+              return redis.call("PEXPIRE", KEYS[1], ARGV[2])
             else
               return 0
             end
         """)
         self._release_script_sha = self.r.script_load("""
-            if redisimpl.call("GET", KEYS[1]) == ARGV[1] then
-              return redisimpl.call("DEL", KEYS[1])
+            if redis.call("GET", KEYS[1]) == ARGV[1] then
+              return redis.call("DEL", KEYS[1])
             else
               return 0
             end

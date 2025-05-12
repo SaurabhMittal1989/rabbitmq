@@ -78,6 +78,6 @@ class IConfigurationManagerClient(ABC):
     # def listen_for_config_changes(self, apply_config: Callable):
     #     pass
 
-    @abstractmethod
-    def stop(self):
-        pass
+    # @abstractmethod
+    # def stop(self):
+    #     pass
