@@ -140,12 +140,12 @@ class RedisLeaderElector(ILeaderElector):
         """Main loop to try to become leader or perform leader/follower duties."""
         stop_main_loop = threading.Event()
 
-        def signal_handler(signum, frame):
-            logging.info(f"Node {self.node_id}: Signal {signum} received, shutting down.")
-            stop_main_loop.set()
-
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
+        # def signal_handler(signum, frame):
+        #     logging.info(f"Node {self.node_id}: Signal {signum} received, shutting down.")
+        #     stop_main_loop.set()
+        #
+        # signal.signal(signal.SIGINT, signal_handler)
+        # signal.signal(signal.SIGTERM, signal_handler)
 
         logging.info(f"Node {self.node_id}: Starting election loop.")
         try:
