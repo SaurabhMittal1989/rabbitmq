@@ -12,12 +12,23 @@ from apps.client_side_consumer_balancer.FollowerCallback import IFollowerCallbac
 from apps.client_side_consumer_balancer.LeaderCallback import ILeaderCallback
 from apps.client_side_consumer_balancer.MessageQueueClient import IMessageQueueClient
 from apps.client_side_consumer_balancer.Register import IRegister
+from apps.client_side_consumer_balancer.aws_handler.consumer_meta_data import IAwsMetaDataHandler
 from apps.client_side_consumer_balancer.config import REDIS_HOST, REDIS_PORT, LOCK_KEY, LEASE_DURATION_MS, \
     RENEWAL_INTERVAL_S
+from apps.client_side_consumer_balancer.redisimpl.RedisConfigurationConsistentHashing import  ClusterManager
 from apps.client_side_consumer_balancer.redisimpl.RedisLeaderElector import RedisLeaderElector
+
+
+class AwsMetaData(IAwsMetaDataHandler):
+
+    def get_active_consumers(self):
+        return ['foo123', 'bar123']
 
 def leader_callback():
     print("[LEADER] Watching for Configuration changes...")
+    aws_meta = AwsMetaData()
+    cluster_manager = ClusterManager(aws_meta_data=aws_meta)
+    cluster_manager.run_leader_tasks()
     time.sleep(5)
 
 # TODO how to use elect leader here?
@@ -77,7 +88,18 @@ class Follower(IFollowerCallback):
 
 class Register(IRegister):
     def register(self):
-        print(f"Registered for Leader Election. Thread ID: {threading.get_ident()}")
+
+        #TODO
+        membership_key = LOCK_KEY
+        # r_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+        # #setting membership
+        # acquired = r_client.set(self.lock_key, self.node_id, nx=True, px=self.lease_duration_ms)
+        # print(f"Registered for Leader Election. Thread ID: {threading.get_ident()}")
+        # #register
+        #
+        # # renew
+        # renewed = r_client.evalsha(self._renew_script_sha, 1, self.lock_key, self.node_id, self.lease_duration_ms)
+
         time.sleep(2)
 
 

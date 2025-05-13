@@ -16,8 +16,10 @@ ELECTION_CHECK_INTERVAL_S = LEASE_DURATION_MS / 1000 / NUMBER_OF_TIMES_TO_CHECK_
 
 
 #REDIS Follower:
-CONFIG_KEY = f"consumer:queues_config:{uuid.uuid4()}"
-CONFIG_KEY = f"consumer:queues_config:123"
+UUID = uuid.uuid4()
+CONFIG_KEY = f"consumer:queues_config:{UUID}"
+REGISTER_KEY = f"consumer:leader_participants:membership"
+# CONFIG_KEY = f"consumer:queues_config:123"
 print("CONFIG KEY CHANGES: ", CONFIG_KEY)
 REDIS_DB_NUMBER = 0
 
