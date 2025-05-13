@@ -14,9 +14,10 @@ from apps.client_side_consumer_balancer.MessageQueueClient import IMessageQueueC
 from apps.client_side_consumer_balancer.Register import IRegister
 from apps.client_side_consumer_balancer.aws_handler.consumer_meta_data import IAwsMetaDataHandler
 from apps.client_side_consumer_balancer.config import REDIS_HOST, REDIS_PORT, LOCK_KEY, LEASE_DURATION_MS, \
-    RENEWAL_INTERVAL_S
+    RENEWAL_INTERVAL_S, UUID
 from apps.client_side_consumer_balancer.redisimpl.RedisConfigurationConsistentHashing import  ClusterManager
 from apps.client_side_consumer_balancer.redisimpl.RedisLeaderElector import RedisLeaderElector
+from apps.client_side_consumer_balancer.redisimpl.RedisRegister import Register
 
 
 class AwsMetaData(IAwsMetaDataHandler):
@@ -86,21 +87,21 @@ class Follower(IFollowerCallback):
         time.sleep(2)
 
 
-class Register(IRegister):
-    def register(self):
-
-        #TODO
-        membership_key = LOCK_KEY
-        # r_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
-        # #setting membership
-        # acquired = r_client.set(self.lock_key, self.node_id, nx=True, px=self.lease_duration_ms)
-        # print(f"Registered for Leader Election. Thread ID: {threading.get_ident()}")
-        # #register
-        #
-        # # renew
-        # renewed = r_client.evalsha(self._renew_script_sha, 1, self.lock_key, self.node_id, self.lease_duration_ms)
-
-        time.sleep(2)
+# class Register(IRegister):
+#     def register(self):
+#
+#         #TODO
+#         membership_key = LOCK_KEY
+#         # r_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+#         # #setting membership
+#         # acquired = r_client.set(self.lock_key, self.node_id, nx=True, px=self.lease_duration_ms)
+#         # print(f"Registered for Leader Election. Thread ID: {threading.get_ident()}")
+#         # #register
+#         #
+#         # # renew
+#         # renewed = r_client.evalsha(self._renew_script_sha, 1, self.lock_key, self.node_id, self.lease_duration_ms)
+#
+#         time.sleep(2)
 
 
 class ConfigurationManagerClient(IConfigurationManagerClient):
@@ -167,9 +168,15 @@ config_client = ConfigurationManagerClient()
 message_queue_client = MessageQueueClient()
 leader = Leader(configuration_manager_client=config_client, message_queue_client=message_queue_client)
 follower = Follower(configuration_manager_client=config_client, message_queue_client=message_queue_client,
-                    config_key=uuid.uuid1())
-register = Register(configuration_manager_client=config_client)
-
+                    config_key=UUID)
+# register = Register(configuration_manager_client=config_client)
+redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+register = Register(redis_client, UUID)
 
 balancer1 = ConsumerSideClientBalancer(leader=leader, follower=follower, register=register)
-balancer1.balance()
+try:
+    balancer1.balance()
+except Exception as e:
+    print(e)
+finally:
+    register.stop()

@@ -2,11 +2,13 @@ import redis
 import time
 import threading
 import logging
+
+from apps.client_side_consumer_balancer.Register import IRegister
 from apps.client_side_consumer_balancer.config import *
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-class ConsumerRegistration:
+class Register(IRegister):
     def __init__(self, redis_client: redis.Redis, consumer_id: str,
                  registration_key_base: str = REGISTER_KEY_BASE,
                  ttl_seconds: int = DEFAULT_REGISTRATION_TTL_SECONDS):
@@ -126,7 +128,7 @@ class ConsumerRegistration:
 
         logging.info(f"Consumer {self.consumer_id}: Registration renewal loop stopped for key '{self.registration_key}'.")
 
-    def start(self) -> bool:
+    def register(self) -> bool:
         """
         Registers the consumer and starts the periodic renewal process.
         Returns True if initial registration is successful, False otherwise.
@@ -203,16 +205,16 @@ if __name__ == "__main__":
 
     # Create and start a consumer registration
     # Shorter TTL for easier testing
-    consumer_reg1 = ConsumerRegistration(r_client, consumer_id="consumer-alpha", ttl_seconds=10)
-    if consumer_reg1.start():
+    consumer_reg1 = Register(r_client, consumer_id="consumer-alpha", ttl_seconds=10)
+    if consumer_reg1.register():
         logging.info(f"Consumer {consumer_reg1.consumer_id} started successfully.")
     else:
         logging.error(f"Failed to start consumer {consumer_reg1.consumer_id}.")
         exit(1)
 
     # Create another consumer
-    consumer_reg2 = ConsumerRegistration(r_client, consumer_id="consumer-beta", ttl_seconds=12)
-    if consumer_reg2.start():
+    consumer_reg2 = Register(r_client, consumer_id="consumer-beta", ttl_seconds=12)
+    if consumer_reg2.register():
         logging.info(f"Consumer {consumer_reg2.consumer_id} started successfully.")
     else:
         logging.error(f"Failed to start consumer {consumer_reg2.consumer_id}.")
