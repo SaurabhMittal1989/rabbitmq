@@ -138,3 +138,15 @@ class ClusterManager:
         else:
             assignments = self._calculate_assignments(active_consumers, available_queues)
             self._update_redis_config(assignments)
+
+
+class AwsMetaData(IAwsMetaDataHandler):
+
+    def get_active_consumers(self):
+        return ['foo123', 'bar123']
+
+
+if __name__ == '__main__':
+    aws_meta = AwsMetaData()
+    cluster_manager = ClusterManager(aws_meta_data=aws_meta)
+    cluster_manager.run_leader_tasks()
