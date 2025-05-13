@@ -16,6 +16,9 @@ from apps.client_side_consumer_balancer.config import REDIS_HOST, REDIS_PORT, LO
     RENEWAL_INTERVAL_S
 from apps.client_side_consumer_balancer.redisimpl.RedisLeaderElector import RedisLeaderElector
 
+def leader_callback():
+    print("[LEADER] Watching for Configuration changes...")
+    time.sleep(5)
 
 # TODO how to use elect leader here?
 def elect_leader(leader_callback: Callable):
@@ -49,8 +52,7 @@ class Leader(ILeaderCallback):
 
     def run(self):
         # print(f"I am the leader. Thread ID: {threading.get_ident()}")
-        print("[LEADER] Watching for Configuration changes...")
-        time.sleep(5)
+        elect_leader(leader_callback=leader_callback)
 
 
 
