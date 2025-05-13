@@ -1,4 +1,4 @@
-
+import signal
 import time  # For sleep or time management during operations
 import threading  # For multithreading (e.g., balancing thread, leader thread, follower thread)
 import uuid  # For generating unique identifiers (e.g., for configuration keys)
@@ -129,6 +129,17 @@ class MessageQueueClient(IMessageQueueClient):
     def __init__(self):
         pass
 
+
+if __name__ == "__main__":
+    stop_event = threading.Event()
+
+    # Signal handling in main thread
+    def signal_handler(signum, frame):
+        print(f"Signal {signum} received. Shutting down...")
+        stop_event.set()
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
 config_client = ConfigurationManagerClient()
 message_queue_client = MessageQueueClient()
