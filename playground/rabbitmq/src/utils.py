@@ -23,8 +23,8 @@ def make_queues(m, n):
     ch = create_channel()
     qs = get_queue_names(q1=m, q2=n)
     for q in qs:
-        ch.queue_declare(queue=q, durable=True, auto_delete=False, )
-        ch.queue_bind(exchange=exchange_name, queue=q, routing_key=str(1))
+        #ch.queue_declare(queue=q, durable=True, auto_delete=False)
+        ch.queue_declare(queue=q, durable=True, auto_delete=False, arguments={'x-single-active-consumer': True})
         print(f"Creating queue: {q}")
     ch.close()
 

@@ -1,0 +1,1 @@
+redis-cli CONFIG SET notify-keyspace-events KEA

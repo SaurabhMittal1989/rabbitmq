@@ -1,7 +1,7 @@
 import time
 from kazoo.recipe.watchers import ChildrenWatch
 
-from apps.zookeeper.src.zk_client import ZooKeeper
+from playground.zookeeper.src.zk_client import ZooKeeper
 
 if __name__ == "__main__":
     # Call my_func when the children change
